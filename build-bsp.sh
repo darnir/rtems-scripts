@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# General script for building RTEMS BSPs.
+
+## Usage: build-bsp.sh -a ARCH -b BSP [options]
+##
+##    -a		Machine Architecture to compile for
+##    -b		BSP to compile
+##
+##    -s		Enable SMP Support
+##    -t		Enable Tests
+##
+##    -n		Bootstrap the build first
+##    -h		Display help output
+
+__HELP=$(grep "^##" "${BASH_SOURCE[0]}" | cut -c 4-)
+
 set -e
 set -u
 set -o pipefail
@@ -15,7 +30,10 @@ mkdir -p "$LOG_DIR"
 # Define empty strings for configure variables
 ENABLE_TESTS=""
 ENABLE_SMP=""
+ARCH=
+BSP=
 
+export OPTERR=0
 while getopts "a:b:stn" options
 do
 	case $options in
@@ -26,7 +44,8 @@ do
 		n) pushd src/rtems; \
 			./bootstrap; \
 			popd;;
-		*) false;;
+		*) echo "$__HELP";
+			exit 0;;
 	esac
 done
 
@@ -34,6 +53,7 @@ if [[ -z "$BSP" || -z "$ARCH" ]]; then
 	echo "Arch: $ARCH"
 	echo "BSP : $BSP"
 	echo "Both, the Arch and BSP arguments must be supplied to this script"
+	exit 1
 fi
 
 # Edit these variables to change the BSP being compiled

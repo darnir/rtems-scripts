@@ -5,7 +5,7 @@ rtems_init() {
 		echo "Please set up the RTEMS dev env via the rtems command first"
 		exit 1
 	else
-		pushd "$HOME/Programming/rtems"
+		pushd "$HOME/Programming/rtems" &> /dev/null
 	fi
 
 	export RTEMS_LOG_DIR="$HOME/Programming/rtems/builds/logs"

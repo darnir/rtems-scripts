@@ -6,6 +6,10 @@
 # Check README for expected directory layout
 # Must be edited to change any configuration settings
 
+# Command Line parameters:
+# $1: Version of RTEMS to build (default: 4.12)
+# $2: BSET to build (default: 4.12/rtems-arm)
+
 set -e
 set -u
 set -o pipefail
