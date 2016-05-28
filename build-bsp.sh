@@ -10,6 +10,7 @@
 ##    -s		Enable SMP Support
 ##    -t		Enable Tests
 ##
+##    -c        A clean Install (remove builddir)
 ##    -n		Bootstrap the build first
 ##    -h		Display help output
 
@@ -28,17 +29,19 @@ LOG_DIR="$HOME/Programming/rtems/builds/logs"
 mkdir -p "$LOG_DIR"
 
 # Define empty strings for configure variables
+CLEAN_INSTALL=false
 ENABLE_TESTS=""
 ENABLE_SMP=""
 ARCH=
 BSP=
 
 export OPTERR=0
-while getopts "a:b:stn" options
+while getopts "a:b:stcn" options
 do
 	case $options in
 		a) ARCH="$OPTARG";;
 		b) BSP="$OPTARG";;
+		c) CLEAN_INSTALL=true;;
 		s) ENABLE_SMP="--enable-smp";;
 		t) ENABLE_TESTS="--enable-tests";;
 		n) pushd src/rtems; \
@@ -65,14 +68,25 @@ if [[ -f "$LOG_DIR/${BSP}_build.log" ]]; then
 	mv "$LOG_DIR/${BSP}_build.log" "$LOG_DIR/${BSP}_build.log.old"
 fi
 
+if [[ $CLEAN_INSTALL ]]; then
+	rm -rf "$BUILDDIR"
+fi
+
 mkdir -p "${BUILDDIR}"
 pushd "${BUILDDIR}"
-time ../../src/rtems/configure						\
-	--target="${ARCH}-rtems${RTEMS_VER}"			\
-	--enable-rtemsbsp="${BSP}"						\
-	--prefix="$HOME/Programming/rtems/${RTEMS_VER}"	\
-	--enable-maintainer-mode						\
-	${ENABLE_TESTS}									\
-	${ENABLE_SMP} 2>&1 | tee "$LOG_DIR/${BSP}_config.log"
+
+if [[ $CLEAN_INSTALL ]]; then
+	time ../../src/rtems/configure						\
+		--target="${ARCH}-rtems${RTEMS_VER}"			\
+		--enable-rtemsbsp="${BSP}"						\
+		--prefix="$HOME/Programming/rtems/${RTEMS_VER}"	\
+		--enable-maintainer-mode						\
+		${ENABLE_TESTS}									\
+		${ENABLE_SMP} 2>&1 | tee "$LOG_DIR/${BSP}_config.log"
+else
+	make preinstall 2>&1 | tee "$LOG_DIR/${BSP}_build_preinstall.log"
+	autoreconf 2>&1 | tee "$LOG_DIR/${BSP}_config.log"
+fi
+
 make 2>&1 | tee "$LOG_DIR/${BSP}_build.log"
 popd
